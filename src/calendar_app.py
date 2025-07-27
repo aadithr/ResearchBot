@@ -112,7 +112,7 @@ def get_google_credentials():
             try:
                 # Determine redirect URI based on environment
                 # Always use the deployed URL for Streamlit Cloud
-                redirect_uri = "https://vcresearchbot.streamlit.app"
+                redirect_uri = "https://vcresearchbot.streamlit.app/"
                 
                 # Check if credentials file exists
                 if not os.path.exists(CREDENTIALS_FILE):
@@ -136,7 +136,7 @@ def get_google_credentials():
                                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                                 "token_uri": "https://oauth2.googleapis.com/token",
                                 "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-                                "redirect_uris": ["http://localhost", "https://vcresearchbot.streamlit.app"]
+                                "redirect_uris": ["http://localhost", "https://vcresearchbot.streamlit.app/"]
                             }
                         }
                         
