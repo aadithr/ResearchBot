@@ -95,12 +95,23 @@ EXCLUDE_DOMAINS = ['@peakxv.com']
 def get_google_credentials():
     creds = None
     if os.path.exists(TOKEN_FILE):
-        with open(TOKEN_FILE, 'rb') as token:
-            creds = pickle.load(token)
+        try:
+            with open(TOKEN_FILE, 'rb') as token:
+                creds = pickle.load(token)
+            st.write(f"Token file found: {TOKEN_FILE}")
+        except Exception as e:
+            st.error(f"Error loading token file: {e}")
+            if os.path.exists(TOKEN_FILE):
+                os.remove(TOKEN_FILE)
+            creds = None
+    
     if not creds or not creds.valid:
+        if creds:
+            st.write(f"Token found but invalid. Expired: {creds.expired}, Has refresh token: {creds.refresh_token}")
         if creds and creds.expired and creds.refresh_token:
             try:
                 creds.refresh(Request())
+                st.success("Token refreshed successfully!")
             except Exception as e:
                 st.error(f"Token refresh failed: {e}")
                 # Remove invalid token file
@@ -181,15 +192,20 @@ def get_google_credentials():
                 st.info("After authorization, you'll be redirected back. If you see an error page, copy the 'code' parameter from the URL and paste it below.")
                 code = st.text_input("Enter the authorization code from the URL (if needed):")
                 if code:
-                    flow.fetch_token(code=code)
-                    creds = flow.credentials
-                    with open(TOKEN_FILE, 'wb') as token:
-                        pickle.dump(creds, token)
-                    st.success("Authentication successful!")
-                    # Clean up temp file if it exists
-                    if 'temp_credentials_file' in locals() and temp_credentials_file and os.path.exists(temp_credentials_file):
-                        os.unlink(temp_credentials_file)
-                    st.rerun()
+                    try:
+                        flow.fetch_token(code=code)
+                        creds = flow.credentials
+                        with open(TOKEN_FILE, 'wb') as token:
+                            pickle.dump(creds, token)
+                        st.success("Authentication successful! Token saved.")
+                        st.write(f"Token saved to: {TOKEN_FILE}")
+                        # Clean up temp file if it exists
+                        if 'temp_credentials_file' in locals() and temp_credentials_file and os.path.exists(temp_credentials_file):
+                            os.unlink(temp_credentials_file)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error saving token: {e}")
+                        return None
                 else:
                     st.warning("Please complete the authorization process first.")
                     # Clean up temp file if it exists
