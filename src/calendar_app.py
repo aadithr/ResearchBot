@@ -421,10 +421,19 @@ def main():
     if OPENAI_API_KEY:
         st.write(f"API key length: {len(OPENAI_API_KEY)}")
         st.write(f"API key starts with: {OPENAI_API_KEY[:10]}...")
+        st.write(f"API key ends with: ...{OPENAI_API_KEY[-10:]}")
+        st.write(f"API key contains spaces: {' ' in OPENAI_API_KEY}")
+        st.write(f"API key contains newlines: {'\\n' in OPENAI_API_KEY}")
+        st.write(f"API key contains tabs: {'\\t' in OPENAI_API_KEY}")
+        
+        # Try cleaning the API key
+        cleaned_key = OPENAI_API_KEY.strip()
+        st.write(f"Cleaned key length: {len(cleaned_key)}")
+        
         try:
             import httpx
             test_client = OpenAI(
-                api_key=OPENAI_API_KEY,
+                api_key=cleaned_key,  # Use cleaned key
                 http_client=httpx.Client(
                     verify=False,  # Disable SSL verification
                     timeout=30.0
