@@ -93,7 +93,9 @@ EXCLUDE_DOMAINS = ['@peakxv.com']
 
 # --- Google Calendar and OpenAI logic (unchanged) ---
 def get_google_credentials():
+    st.write("=== get_google_credentials() called ===")
     # Check for token in session state first (for deployed environments)
+    st.write("Checking session state for credentials...")
     if 'google_creds' in st.session_state:
         st.write("Found credentials in session state")
         creds = st.session_state.google_creds
@@ -102,6 +104,8 @@ def get_google_credentials():
             return creds
         else:
             st.write("Session state credentials are invalid")
+    else:
+        st.write("No credentials found in session state")
     
     # Check for token file (for local development)
     st.write(f"Checking for token file: {TOKEN_FILE}")
