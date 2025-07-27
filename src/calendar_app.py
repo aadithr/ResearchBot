@@ -417,16 +417,33 @@ def main():
         st.write(f"API key length: {len(OPENAI_API_KEY)}")
         st.write(f"API key starts with: {OPENAI_API_KEY[:10]}...")
         try:
-            test_client = OpenAI(api_key=OPENAI_API_KEY)
+            import httpx
+            test_client = OpenAI(
+                api_key=OPENAI_API_KEY,
+                http_client=httpx.Client(
+                    verify=False,  # Disable SSL verification
+                    timeout=30.0
+                )
+            )
+            # Try with gpt-4o instead of gpt-3.5-turbo
             response = test_client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o",
                 messages=[{"role": "user", "content": "Hello"}],
                 max_tokens=5
             )
             st.success("✅ OpenAI API key is valid!")
         except Exception as e:
-            st.error(f"❌ OpenAI API key error: {str(e)}")
-            st.info("Please check your API key in Streamlit Cloud secrets")
+            error_msg = str(e)
+            st.error(f"❌ OpenAI API key error: {error_msg}")
+            
+            if "401" in error_msg:
+                st.info("401 error: API key might be invalid or expired")
+            elif "429" in error_msg:
+                st.info("429 error: Rate limit exceeded")
+            elif "500" in error_msg:
+                st.info("500 error: OpenAI server issue")
+            else:
+                st.info("Please check your API key in Streamlit Cloud secrets")
     else:
         st.error("❌ OPENAI_API_KEY not found in environment variables")
 
