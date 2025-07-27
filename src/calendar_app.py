@@ -413,6 +413,11 @@ def main():
     
     # Test OpenAI API key
     st.write(f"OPENAI_API_KEY loaded: {OPENAI_API_KEY is not None}")
+    
+    # Try multiple ways to get the API key
+    api_key_from_env = os.getenv('OPENAI_API_KEY')
+    st.write(f"API key from os.getenv: {api_key_from_env is not None}")
+    
     if OPENAI_API_KEY:
         st.write(f"API key length: {len(OPENAI_API_KEY)}")
         st.write(f"API key starts with: {OPENAI_API_KEY[:10]}...")
