@@ -110,9 +110,8 @@ def get_google_credentials():
         
         if not creds:
             try:
-                # Determine redirect URI based on environment (moved up)
+                # Determine redirect URI based on environment
                 if IS_DEPLOYED:
-                    # For deployed environment, use the Streamlit Cloud URL
                     redirect_uri = "https://vcresearchbot.streamlit.app"
                 else:
                     redirect_uri = 'http://localhost'
@@ -127,7 +126,11 @@ def get_google_credentials():
                     
                     if client_id and client_secret:
                         st.success("Found Google OAuth credentials in environment variables!")
-                        # Create credentials dict for OAuth flow
+                        
+                        # Create temporary credentials file
+                        import tempfile
+                        import json
+                        
                         credentials_dict = {
                             "web": {
                                 "client_id": client_id,
@@ -139,26 +142,12 @@ def get_google_credentials():
                             }
                         }
                         
-                        # Create temporary credentials file
-                        import tempfile
-                        import json
-                        
                         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
                             json.dump(credentials_dict, f)
                             temp_credentials_file = f.name
                         
-                        try:
-                            flow = Flow.from_client_secrets_file(
-                                temp_credentials_file, SCOPES,
-                                redirect_uri=redirect_uri)
-                            # Continue with OAuth flow...
-                        except Exception as e:
-                            st.error(f"Failed to create OAuth flow: {e}")
-                            return None
-                        finally:
-                            # Clean up temp file
-                            if os.path.exists(temp_credentials_file):
-                                os.unlink(temp_credentials_file)
+                        # Use temporary file
+                        credentials_file_to_use = temp_credentials_file
                     else:
                         st.error("Google OAuth credentials not configured.")
                         st.info("""
@@ -172,18 +161,22 @@ def get_google_credentials():
                         return None
                 else:
                     # Use regular credentials file
+                    credentials_file_to_use = CREDENTIALS_FILE
                     temp_credentials_file = None
                 
-                # Use temporary credentials file if created, otherwise use the regular file
-                credentials_file_to_use = temp_credentials_file if temp_credentials_file else CREDENTIALS_FILE
-                
+                # Create OAuth flow
                 try:
                     flow = Flow.from_client_secrets_file(
                         credentials_file_to_use, SCOPES,
                         redirect_uri=redirect_uri)
                 except Exception as e:
                     st.error(f"Failed to create OAuth flow: {e}")
+                    # Clean up temp file if it exists
+                    if 'temp_credentials_file' in locals() and temp_credentials_file and os.path.exists(temp_credentials_file):
+                        os.unlink(temp_credentials_file)
                     return None
+                
+                # Show authorization URL
                 auth_url, _ = flow.authorization_url(prompt='consent')
                 st.info(f"Please go to the following URL to authorize the application:")
                 st.markdown(f"[**Click here to authorize**]({auth_url})")
@@ -195,12 +188,21 @@ def get_google_credentials():
                     with open(TOKEN_FILE, 'wb') as token:
                         pickle.dump(creds, token)
                     st.success("Authentication successful!")
+                    # Clean up temp file if it exists
+                    if 'temp_credentials_file' in locals() and temp_credentials_file and os.path.exists(temp_credentials_file):
+                        os.unlink(temp_credentials_file)
                     st.rerun()
                 else:
                     st.warning("Please complete the authorization process first.")
+                    # Clean up temp file if it exists
+                    if 'temp_credentials_file' in locals() and temp_credentials_file and os.path.exists(temp_credentials_file):
+                        os.unlink(temp_credentials_file)
                     return None
             except Exception as e:
                 st.error(f"Authentication failed: {e}")
+                # Clean up temp file if it exists
+                if 'temp_credentials_file' in locals() and temp_credentials_file and os.path.exists(temp_credentials_file):
+                    os.unlink(temp_credentials_file)
                 return None
     return creds
 
