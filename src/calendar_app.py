@@ -93,6 +93,17 @@ EXCLUDE_DOMAINS = ['@peakxv.com']
 
 # --- Google Calendar and OpenAI logic (unchanged) ---
 def get_google_credentials():
+    # Check for token in session state first (for deployed environments)
+    if 'google_creds' in st.session_state:
+        st.write("Found credentials in session state")
+        creds = st.session_state.google_creds
+        if creds and creds.valid:
+            st.write("Session state credentials are valid")
+            return creds
+        else:
+            st.write("Session state credentials are invalid")
+    
+    # Check for token file (for local development)
     st.write(f"Checking for token file: {TOKEN_FILE}")
     st.write(f"Token file exists: {os.path.exists(TOKEN_FILE)}")
     
@@ -201,12 +212,21 @@ def get_google_credentials():
                         st.write("Processing authorization code...")
                         flow.fetch_token(code=code)
                         creds = flow.credentials
-                        st.write("Token fetched successfully, saving to file...")
-                        with open(TOKEN_FILE, 'wb') as token:
-                            pickle.dump(creds, token)
-                        st.success("Authentication successful! Token saved.")
-                        st.write(f"Token saved to: {TOKEN_FILE}")
-                        st.write(f"Token file exists after save: {os.path.exists(TOKEN_FILE)}")
+                        st.write("Token fetched successfully, saving to session state...")
+                        
+                        # Save to session state (for deployed environments)
+                        st.session_state.google_creds = creds
+                        st.write("Token saved to session state")
+                        
+                        # Try to save to file as well (for local development)
+                        try:
+                            with open(TOKEN_FILE, 'wb') as token:
+                                pickle.dump(creds, token)
+                            st.write(f"Token also saved to file: {TOKEN_FILE}")
+                        except Exception as file_error:
+                            st.write(f"Could not save to file (expected in deployment): {file_error}")
+                        
+                        st.success("Authentication successful! Token saved to session.")
                         # Clean up temp file if it exists
                         if 'temp_credentials_file' in locals() and temp_credentials_file and os.path.exists(temp_credentials_file):
                             os.unlink(temp_credentials_file)
