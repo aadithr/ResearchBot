@@ -93,17 +93,22 @@ EXCLUDE_DOMAINS = ['@peakxv.com']
 
 # --- Google Calendar and OpenAI logic (unchanged) ---
 def get_google_credentials():
+    st.write(f"Checking for token file: {TOKEN_FILE}")
+    st.write(f"Token file exists: {os.path.exists(TOKEN_FILE)}")
+    
     creds = None
     if os.path.exists(TOKEN_FILE):
         try:
             with open(TOKEN_FILE, 'rb') as token:
                 creds = pickle.load(token)
-            st.write(f"Token file found: {TOKEN_FILE}")
+            st.write(f"Token file found and loaded: {TOKEN_FILE}")
         except Exception as e:
             st.error(f"Error loading token file: {e}")
             if os.path.exists(TOKEN_FILE):
                 os.remove(TOKEN_FILE)
             creds = None
+    else:
+        st.write("No token file found, will need to authenticate")
     
     if not creds or not creds.valid:
         if creds:
@@ -193,18 +198,23 @@ def get_google_credentials():
                 code = st.text_input("Enter the authorization code from the URL (if needed):")
                 if code:
                     try:
+                        st.write("Processing authorization code...")
                         flow.fetch_token(code=code)
                         creds = flow.credentials
+                        st.write("Token fetched successfully, saving to file...")
                         with open(TOKEN_FILE, 'wb') as token:
                             pickle.dump(creds, token)
                         st.success("Authentication successful! Token saved.")
                         st.write(f"Token saved to: {TOKEN_FILE}")
+                        st.write(f"Token file exists after save: {os.path.exists(TOKEN_FILE)}")
                         # Clean up temp file if it exists
                         if 'temp_credentials_file' in locals() and temp_credentials_file and os.path.exists(temp_credentials_file):
                             os.unlink(temp_credentials_file)
                         st.rerun()
                     except Exception as e:
                         st.error(f"Error saving token: {e}")
+                        st.write(f"Current working directory: {os.getcwd()}")
+                        st.write(f"Can write to current directory: {os.access('.', os.W_OK)}")
                         return None
                 else:
                     st.warning("Please complete the authorization process first.")
