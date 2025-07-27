@@ -24,6 +24,25 @@ load_dotenv(dotenv_path=os.path.join('config', '.env'))
 PERPLEXITY_API_KEY = os.getenv('PERPLEXITY_API_KEY')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
+# Support for multiple OAuth configurations
+def get_oauth_config():
+    """Get OAuth configuration based on user or default"""
+    # Check if user has custom OAuth config
+    user_id = st.session_state.get('user_id', '')
+    
+    # Try to get user-specific OAuth config
+    user_client_id = os.getenv(f'GOOGLE_CLIENT_ID_{user_id.upper().replace(" ", "_")}')
+    user_client_secret = os.getenv(f'GOOGLE_CLIENT_SECRET_{user_id.upper().replace(" ", "_")}')
+    
+    if user_client_id and user_client_secret:
+        return user_client_id, user_client_secret
+    
+    # Fall back to default OAuth config
+    default_client_id = os.getenv('GOOGLE_CLIENT_ID')
+    default_client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
+    
+    return default_client_id, default_client_secret
+
 st.write(f"OPENAI_API_KEY loaded: {OPENAI_API_KEY is not None}")
 
 EXCLUDE_EMAILS = ['96aadith@gmail.com']
@@ -54,8 +73,7 @@ def get_google_credentials():
                     st.info("For deployment, credentials need to be configured as environment variables.")
                     
                     # Try to get credentials from environment variables
-                    client_id = os.getenv('GOOGLE_CLIENT_ID')
-                    client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
+                    client_id, client_secret = get_oauth_config()
                     
                     if client_id and client_secret:
                         st.success("Found Google OAuth credentials in environment variables!")
@@ -92,7 +110,13 @@ def get_google_credentials():
                             if os.path.exists(temp_credentials_file):
                                 os.unlink(temp_credentials_file)
                     else:
-                        st.error("Please contact your administrator to set up Google OAuth credentials.")
+                        st.error("Google OAuth credentials not found.")
+                        st.info("""
+                        **For Team Usage:**
+                        - Each team member needs their own Google OAuth credentials
+                        - Contact your administrator to add your credentials
+                        - Or follow the setup guide in TEAM_SETUP.md
+                        """)
                         return None
                 
                 # Determine redirect URI based on environment
