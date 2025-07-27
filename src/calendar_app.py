@@ -57,8 +57,7 @@ def get_google_credentials():
                 # Determine redirect URI based on environment
                 if IS_DEPLOYED:
                     # For deployed environment, use the Streamlit Cloud URL
-                    # This will be updated by the admin after deployment
-                    redirect_uri = "https://your-app-name.streamlit.app"  # Update this with your actual app URL
+                    redirect_uri = "https://vcresearchbot.streamlit.app"
                 else:
                     redirect_uri = 'http://localhost'
                 
