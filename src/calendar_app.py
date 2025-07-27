@@ -26,22 +26,65 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 # Support for multiple OAuth configurations
 def get_oauth_config():
-    """Get OAuth configuration based on user or default"""
-    # Check if user has custom OAuth config
-    user_id = st.session_state.get('user_id', '')
+    """Get OAuth configuration - always use the main credentials"""
+    # Use the main OAuth credentials for everyone
+    # Each user will authenticate with their own Google account
+    client_id = os.getenv('GOOGLE_CLIENT_ID')
+    client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
     
-    # Try to get user-specific OAuth config
-    user_client_id = os.getenv(f'GOOGLE_CLIENT_ID_{user_id.upper().replace(" ", "_")}')
-    user_client_secret = os.getenv(f'GOOGLE_CLIENT_SECRET_{user_id.upper().replace(" ", "_")}')
+    return client_id, client_secret
+
+def admin_oauth_setup():
+    """Admin interface for managing team OAuth credentials"""
+    st.markdown("### 🔧 Admin: Team OAuth Setup")
+    st.info("Add team members' Google OAuth credentials here. They only need to do this once.")
     
-    if user_client_id and user_client_secret:
-        return user_client_id, user_client_secret
+    # Load existing team config
+    team_config = st.session_state.get('team_oauth_config', {})
     
-    # Fall back to default OAuth config
-    default_client_id = os.getenv('GOOGLE_CLIENT_ID')
-    default_client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
+    with st.form("add_team_member"):
+        member_name = st.text_input("Team Member Name:", placeholder="e.g., John Doe")
+        client_id = st.text_input("Google Client ID:", placeholder="xxx.apps.googleusercontent.com")
+        client_secret = st.text_input("Google Client Secret:", placeholder="GOCSPX-...", type="password")
+        
+        if st.form_submit_button("Add Team Member"):
+            if member_name and client_id and client_secret:
+                team_config[member_name] = {
+                    'client_id': client_id,
+                    'client_secret': client_secret
+                }
+                st.session_state.team_oauth_config = team_config
+                st.success(f"Added {member_name} to team configuration!")
+                st.rerun()
+            else:
+                st.error("Please fill in all fields")
     
-    return default_client_id, default_client_secret
+    # Display current team members
+    if team_config:
+        st.markdown("#### Current Team Members:")
+        for name, config in team_config.items():
+            col1, col2, col3 = st.columns([2, 1, 1])
+            with col1:
+                st.write(f"**{name}**")
+            with col2:
+                st.write("✅ Configured")
+            with col3:
+                if st.button(f"Remove {name}", key=f"remove_{name}"):
+                    del team_config[name]
+                    st.session_state.team_oauth_config = team_config
+                    st.rerun()
+    
+    # Instructions for team members
+    st.markdown("---")
+    st.markdown("#### 📋 Instructions for Team Members:")
+    st.markdown("""
+    1. **Ask each team member for their Google OAuth credentials**
+    2. **Add them above using the form**
+    3. **Team members just need to:**
+       - Enter their name in the sidebar
+       - Complete Google OAuth once
+       - Start using the app!
+    """)
 
 st.write(f"OPENAI_API_KEY loaded: {OPENAI_API_KEY is not None}")
 
@@ -110,12 +153,14 @@ def get_google_credentials():
                             if os.path.exists(temp_credentials_file):
                                 os.unlink(temp_credentials_file)
                     else:
-                        st.error("Google OAuth credentials not found.")
+                        st.error("Google OAuth credentials not configured.")
                         st.info("""
                         **For Team Usage:**
-                        - Each team member needs their own Google OAuth credentials
-                        - Contact your administrator to add your credentials
-                        - Or follow the setup guide in TEAM_SETUP.md
+                        - Contact your administrator to set up Google OAuth
+                        - Once configured, team members just need to:
+                          - Enter their name
+                          - Login with their Google account
+                          - Start using the app!
                         """)
                         return None
                 
@@ -323,6 +368,8 @@ def main():
         if st.button("Change User"):
             del st.session_state.user_id
             st.rerun()
+        
+
 
     creds = get_google_credentials()
     if not creds:
