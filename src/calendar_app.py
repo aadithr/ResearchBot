@@ -110,6 +110,13 @@ def get_google_credentials():
         
         if not creds:
             try:
+                # Determine redirect URI based on environment (moved up)
+                if IS_DEPLOYED:
+                    # For deployed environment, use the Streamlit Cloud URL
+                    redirect_uri = "https://vcresearchbot.streamlit.app"
+                else:
+                    redirect_uri = 'http://localhost'
+                
                 # Check if credentials file exists
                 if not os.path.exists(CREDENTIALS_FILE):
                     st.error("Google OAuth credentials not found.")
@@ -163,20 +170,20 @@ def get_google_credentials():
                           - Start using the app!
                         """)
                         return None
-                
-                # Determine redirect URI based on environment
-                if IS_DEPLOYED:
-                    # For deployed environment, use the Streamlit Cloud URL
-                    redirect_uri = "https://vcresearchbot.streamlit.app"
                 else:
-                    redirect_uri = 'http://localhost'
+                    # Use regular credentials file
+                    temp_credentials_file = None
                 
                 # Use temporary credentials file if created, otherwise use the regular file
-                credentials_file_to_use = temp_credentials_file if 'temp_credentials_file' in locals() else CREDENTIALS_FILE
+                credentials_file_to_use = temp_credentials_file if temp_credentials_file else CREDENTIALS_FILE
                 
-                flow = Flow.from_client_secrets_file(
-                    credentials_file_to_use, SCOPES,
-                    redirect_uri=redirect_uri)
+                try:
+                    flow = Flow.from_client_secrets_file(
+                        credentials_file_to_use, SCOPES,
+                        redirect_uri=redirect_uri)
+                except Exception as e:
+                    st.error(f"Failed to create OAuth flow: {e}")
+                    return None
                 auth_url, _ = flow.authorization_url(prompt='consent')
                 st.info(f"Please go to the following URL to authorize the application:")
                 st.markdown(f"[**Click here to authorize**]({auth_url})")
