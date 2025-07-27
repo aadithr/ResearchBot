@@ -111,10 +111,8 @@ def get_google_credentials():
         if not creds:
             try:
                 # Determine redirect URI based on environment
-                if IS_DEPLOYED:
-                    redirect_uri = "https://vcresearchbot.streamlit.app"
-                else:
-                    redirect_uri = 'http://localhost'
+                # Always use the deployed URL for Streamlit Cloud
+                redirect_uri = "https://vcresearchbot.streamlit.app"
                 
                 # Check if credentials file exists
                 if not os.path.exists(CREDENTIALS_FILE):
