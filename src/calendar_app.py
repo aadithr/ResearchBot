@@ -86,7 +86,21 @@ def admin_oauth_setup():
        - Start using the app!
     """)
 
-st.write(f"OPENAI_API_KEY loaded: {OPENAI_API_KEY is not None}")
+    st.write(f"OPENAI_API_KEY loaded: {OPENAI_API_KEY is not None}")
+    
+    # Test OpenAI API key
+    if OPENAI_API_KEY:
+        try:
+            test_client = OpenAI(api_key=OPENAI_API_KEY)
+            response = test_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": "Hello"}],
+                max_tokens=5
+            )
+            st.success("✅ OpenAI API key is valid!")
+        except Exception as e:
+            st.error(f"❌ OpenAI API key error: {str(e)}")
+            st.info("Please check your API key in Streamlit Cloud secrets")
 
 EXCLUDE_EMAILS = ['96aadith@gmail.com']
 EXCLUDE_DOMAINS = ['@peakxv.com']
