@@ -414,6 +414,8 @@ def main():
     # Test OpenAI API key
     st.write(f"OPENAI_API_KEY loaded: {OPENAI_API_KEY is not None}")
     if OPENAI_API_KEY:
+        st.write(f"API key length: {len(OPENAI_API_KEY)}")
+        st.write(f"API key starts with: {OPENAI_API_KEY[:10]}...")
         try:
             test_client = OpenAI(api_key=OPENAI_API_KEY)
             response = test_client.chat.completions.create(
