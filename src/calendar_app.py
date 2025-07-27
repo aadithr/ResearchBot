@@ -86,21 +86,7 @@ def admin_oauth_setup():
        - Start using the app!
     """)
 
-    st.write(f"OPENAI_API_KEY loaded: {OPENAI_API_KEY is not None}")
-    
-    # Test OpenAI API key
-    if OPENAI_API_KEY:
-        try:
-            test_client = OpenAI(api_key=OPENAI_API_KEY)
-            response = test_client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": "Hello"}],
-                max_tokens=5
-            )
-            st.success("✅ OpenAI API key is valid!")
-        except Exception as e:
-            st.error(f"❌ OpenAI API key error: {str(e)}")
-            st.info("Please check your API key in Streamlit Cloud secrets")
+
 
 EXCLUDE_EMAILS = ['96aadith@gmail.com']
 EXCLUDE_DOMAINS = ['@peakxv.com']
@@ -424,6 +410,23 @@ def main():
     st.title("Google Calendar Meeting Research Assistant")
     st.write("Authenticate with Google, pick a date, and see your meetings and attendees. Founders will be identified automatically using OpenAI.")
     st.info("After reviewing and editing all enrichment fields, press 'Run Deep Research' to start research. You can edit all details before running research.")
+    
+    # Test OpenAI API key
+    st.write(f"OPENAI_API_KEY loaded: {OPENAI_API_KEY is not None}")
+    if OPENAI_API_KEY:
+        try:
+            test_client = OpenAI(api_key=OPENAI_API_KEY)
+            response = test_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": "Hello"}],
+                max_tokens=5
+            )
+            st.success("✅ OpenAI API key is valid!")
+        except Exception as e:
+            st.error(f"❌ OpenAI API key error: {str(e)}")
+            st.info("Please check your API key in Streamlit Cloud secrets")
+    else:
+        st.error("❌ OPENAI_API_KEY not found in environment variables")
 
     # User identification for team usage
     if 'user_id' not in st.session_state:
