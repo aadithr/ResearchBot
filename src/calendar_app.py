@@ -210,7 +210,16 @@ def get_google_credentials():
                 st.info(f"Please go to the following URL to authorize the application:")
                 st.markdown(f"[**Click here to authorize**]({auth_url})")
                 st.info("After authorization, you'll be redirected back. If you see an error page, copy the 'code' parameter from the URL and paste it below.")
-                code = st.text_input("Enter the authorization code from the URL (if needed):")
+                
+                # Try to extract code from URL parameters automatically
+                import urllib.parse
+                query_params = st.experimental_get_query_params()
+                code = query_params.get('code', [None])[0]
+                
+                if not code:
+                    code = st.text_input("Enter the authorization code from the URL (if needed):")
+                else:
+                    st.success("Authorization code found in URL!")
                 if code:
                     try:
                         st.write("Processing authorization code...")
