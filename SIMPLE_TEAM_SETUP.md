@@ -29,11 +29,12 @@ GOOGLE_CLIENT_SECRET = "your-client-secret"
 
 ### Super Simple Process:
 1. **Visit your app**: `https://vcresearchbot.streamlit.app`
-2. **Enter their name** in the sidebar
-3. **Click "Fetch Meetings"**
-4. **Login with their Google account** (normal Gmail login)
-5. **Authorize the app** (one-time process)
-6. **Start using the app!**
+2. **Enter their name** in the sidebar (can be anything - John, Sarah, Alex, etc.)
+3. **Click "Start"**
+4. **Click "Fetch Meetings"**
+5. **Login with their Google account** (normal Gmail login)
+6. **Authorize the app** (one-time process)
+7. **Start using the app!**
 
 ## How It Works
 
@@ -53,7 +54,7 @@ GOOGLE_CLIENT_SECRET = "your-client-secret"
 ## That's It!
 
 Your team members just need to:
-1. **Enter their name**
+1. **Enter their name** (anything they want)
 2. **Login with Google**
 3. **Start researching!**
 

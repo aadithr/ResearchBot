@@ -348,14 +348,18 @@ def main():
     # User identification for team usage
     if 'user_id' not in st.session_state:
         with st.sidebar:
-            st.markdown("### Team Member Setup")
-            user_id = st.text_input("Enter your name/ID:", placeholder="e.g., John Doe")
-            if st.button("Set User ID"):
-                st.session_state.user_id = user_id
-                st.rerun()
+            st.markdown("### 👋 Welcome!")
+            st.info("Enter your name to get started. This helps track your research sessions.")
+            user_id = st.text_input("Your name:", placeholder="e.g., John, Sarah, Alex")
+            if st.button("Start"):
+                if user_id.strip():
+                    st.session_state.user_id = user_id.strip()
+                    st.rerun()
+                else:
+                    st.error("Please enter your name")
     
     if 'user_id' not in st.session_state:
-        st.warning("Please set your user ID in the sidebar to continue.")
+        st.warning("Please enter your name in the sidebar to continue.")
         st.stop()
 
     if not OPENAI_API_KEY:
@@ -364,8 +368,8 @@ def main():
 
     # Display user info
     with st.sidebar:
-        st.markdown(f"**Current User:** {st.session_state.user_id}")
-        if st.button("Change User"):
+        st.markdown(f"**Welcome, {st.session_state.user_id}!**")
+        if st.button("Change Name"):
             del st.session_state.user_id
             st.rerun()
         
