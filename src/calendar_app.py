@@ -16,6 +16,9 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 CREDENTIALS_FILE = 'credentials.json'  # You must provide this from Google Cloud Console
 TOKEN_FILE = 'token.pickle'
 
+# Check if we're in a deployed environment
+IS_DEPLOYED = os.getenv('STREAMLIT_SERVER_RUNNING', False)
+
 # Load environment variables - supports both .env file and deployment environment variables
 load_dotenv(dotenv_path=os.path.join('config', '.env'))
 PERPLEXITY_API_KEY = os.getenv('PERPLEXITY_API_KEY')
@@ -45,9 +48,27 @@ def get_google_credentials():
         
         if not creds:
             try:
+                # Check if credentials file exists
+                if not os.path.exists(CREDENTIALS_FILE):
+                    st.error("Google OAuth credentials not found. Please contact your administrator to set up Google Calendar integration.")
+                    st.info("For deployment, you need to set up Google OAuth credentials in your deployment platform.")
+                    return None
+                
+                # Determine redirect URI based on environment
+                if IS_DEPLOYED:
+                    # Get the current URL for redirect
+                    import urllib.parse
+                    current_url = st.get_option("server.baseUrlPath")
+                    if current_url:
+                        redirect_uri = f"https://{current_url}"
+                    else:
+                        redirect_uri = "https://your-app-name.streamlit.app"  # Will be updated by admin
+                else:
+                    redirect_uri = 'http://localhost'
+                
                 flow = Flow.from_client_secrets_file(
                     CREDENTIALS_FILE, SCOPES,
-                    redirect_uri='http://localhost')
+                    redirect_uri=redirect_uri)
                 auth_url, _ = flow.authorization_url(prompt='consent')
                 st.info(f"Please go to the following URL to authorize the application:")
                 st.markdown(f"[**Click here to authorize**]({auth_url})")
