@@ -50,9 +50,50 @@ def get_google_credentials():
             try:
                 # Check if credentials file exists
                 if not os.path.exists(CREDENTIALS_FILE):
-                    st.error("Google OAuth credentials not found. Please contact your administrator to set up Google Calendar integration.")
-                    st.info("For deployment, you need to set up Google OAuth credentials in your deployment platform.")
-                    return None
+                    st.error("Google OAuth credentials not found.")
+                    st.info("For deployment, credentials need to be configured as environment variables.")
+                    
+                    # Try to get credentials from environment variables
+                    client_id = os.getenv('GOOGLE_CLIENT_ID')
+                    client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
+                    
+                    if client_id and client_secret:
+                        st.success("Found Google OAuth credentials in environment variables!")
+                        # Create credentials dict for OAuth flow
+                        credentials_dict = {
+                            "web": {
+                                "client_id": client_id,
+                                "client_secret": client_secret,
+                                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                                "token_uri": "https://oauth2.googleapis.com/token",
+                                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                                "redirect_uris": ["http://localhost", "https://vcresearchbot.streamlit.app"]
+                            }
+                        }
+                        
+                        # Create temporary credentials file
+                        import tempfile
+                        import json
+                        
+                        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                            json.dump(credentials_dict, f)
+                            temp_credentials_file = f.name
+                        
+                        try:
+                            flow = Flow.from_client_secrets_file(
+                                temp_credentials_file, SCOPES,
+                                redirect_uri=redirect_uri)
+                            # Continue with OAuth flow...
+                        except Exception as e:
+                            st.error(f"Failed to create OAuth flow: {e}")
+                            return None
+                        finally:
+                            # Clean up temp file
+                            if os.path.exists(temp_credentials_file):
+                                os.unlink(temp_credentials_file)
+                    else:
+                        st.error("Please contact your administrator to set up Google OAuth credentials.")
+                        return None
                 
                 # Determine redirect URI based on environment
                 if IS_DEPLOYED:
@@ -61,8 +102,11 @@ def get_google_credentials():
                 else:
                     redirect_uri = 'http://localhost'
                 
+                # Use temporary credentials file if created, otherwise use the regular file
+                credentials_file_to_use = temp_credentials_file if 'temp_credentials_file' in locals() else CREDENTIALS_FILE
+                
                 flow = Flow.from_client_secrets_file(
-                    CREDENTIALS_FILE, SCOPES,
+                    credentials_file_to_use, SCOPES,
                     redirect_uri=redirect_uri)
                 auth_url, _ = flow.authorization_url(prompt='consent')
                 st.info(f"Please go to the following URL to authorize the application:")
