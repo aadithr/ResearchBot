@@ -430,9 +430,18 @@ def main():
                     timeout=30.0
                 )
             )
-            # Try with gpt-4o instead of gpt-3.5-turbo
+            # First try to list available models
+            try:
+                models = test_client.models.list()
+                st.write(f"Available models: {len(models.data)} models")
+                for model in models.data[:5]:  # Show first 5 models
+                    st.write(f"- {model.id}")
+            except Exception as model_error:
+                st.write(f"Could not list models: {model_error}")
+            
+            # Try with gpt-4o-mini which should work with most API keys
             response = test_client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o-mini",
                 messages=[{"role": "user", "content": "Hello"}],
                 max_tokens=5
             )
