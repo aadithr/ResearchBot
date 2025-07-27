@@ -56,13 +56,9 @@ def get_google_credentials():
                 
                 # Determine redirect URI based on environment
                 if IS_DEPLOYED:
-                    # Get the current URL for redirect
-                    import urllib.parse
-                    current_url = st.get_option("server.baseUrlPath")
-                    if current_url:
-                        redirect_uri = f"https://{current_url}"
-                    else:
-                        redirect_uri = "https://your-app-name.streamlit.app"  # Will be updated by admin
+                    # For deployed environment, use the Streamlit Cloud URL
+                    # This will be updated by the admin after deployment
+                    redirect_uri = "https://your-app-name.streamlit.app"  # Update this with your actual app URL
                 else:
                     redirect_uri = 'http://localhost'
                 
